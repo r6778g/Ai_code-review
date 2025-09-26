@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+pydantic
+sqlalchemy
+alembic
+
+[dev]
+black
+flake8
+isort
+pytest
