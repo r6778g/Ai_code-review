@@ -159,7 +159,7 @@ async def github_webhook(request: Request):
 
         # Fetch files
         files_url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/files"
-        response = requests.get(files_url, headers=headers_github, timeout=45)
+        response = requests.get(files_url, headers=headers_github, timeout=60)
         if response.status_code != 200:
             raise HTTPException(status_code=500, detail="Failed to fetch PR files")
 
