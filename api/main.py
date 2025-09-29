@@ -26,7 +26,7 @@ last_full_comment = ""     # combined AI review
 # CORS setup
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://4ab1fa26464e.ngrok-free.app"],
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
