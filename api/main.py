@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from typing import Dict, List, Tuple
 import numpy as np
-from model import query_openrouter_focused, get_file_language,add_to_memory
+from .model import query_openrouter_focused, get_file_language
 import ast
 
 
