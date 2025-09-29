@@ -8,11 +8,8 @@ import json
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from typing import Dict, List, Tuple
-from sentence_transformers import SentenceTransformer
 import numpy as np
-from class_ import FeedbackInput
 from model import query_openrouter_focused, get_file_language,add_to_memory
-import chromadb
 import ast
 
 
@@ -34,10 +31,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-db = chromadb.PersistentClient(path="./memory_db")
-memory_store = db.get_or_create_collection("memory")
-chroma_client = chromadb.PersistentClient(path="./chroma_db")
-collection = chroma_client.get_or_create_collection(name="code_reviews")
+
 # GitHub token setup
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
@@ -228,46 +222,7 @@ async def github_webhook(request: Request):
         logger.error(f"Error processing webhook: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Webhook processing failed: {str(e)}")
 
-@app.get("/memory/vectors")
-async def get_memory_with_vectors():
-    return collection.count()
-    # Fetch all stored items from Chroma
 
-
-'''     vectors = []
-    embeddings = results.get("embeddings")
-    metadatas = results.get("metadatas", [])
-
-    for i in range(len(results["ids"])):
-        vectors.append({
-            "id": results["ids"][i],
-            "text": results["documents"][i],
-            "vector": embeddings[i] ,
-            "feedback": metadatas[i].get("feedback")
-        }) '''
-            
-
-
-@app.post("/feedback")
-async def collect_feedback(fb: FeedbackInput):
-    try:
-        global last_patches, last_full_comment
-        if not last_patches or not last_full_comment:
-            raise HTTPException(status_code=400, detail="No review context available")
-        
-        # Save each patch + feedback into Chroma
-        for patch in last_patches:
-            add_to_memory(patch, last_full_comment, fb.feedback)
-
-        return {
-            "status": "saved",
-            "feedback": fb.feedback,
-            "attached_inputs": len(last_patches),
-            "attached_output": "full_comment"
-        }
-    except Exception as e:
-        logger.error(f"Error saving feedback: {str(e)}")
-        raise HTTPException(status_code=500, detail="Feedback save failed")
 
 
 @app.get("/")
