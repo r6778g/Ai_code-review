@@ -14,20 +14,14 @@ from class_ import FeedbackInput
 from model import query_openrouter_focused, get_file_language,add_to_memory
 import chromadb
 import ast
-from fastapi.responses import StreamingResponse
+
 
 load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 app = FastAPI()
-def big_data_generator():
-    for i in range(1000000):
-        yield f"Line {i}\n"
 
-@app.get("/stream")
-def stream_large_file():
-    return StreamingResponse(big_data_generator(), media_type="text/plain")
 # Globals to store last review context
 last_patches = []          # list of patches
 last_full_comment = ""     # combined AI review
