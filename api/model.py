@@ -7,18 +7,10 @@ import re
 import json
 from dotenv import load_dotenv
 from typing import Dict, List
-from sentence_transformers import SentenceTransformer
-import chromadb
 import uuid
 
 # Initialize client with persistent storage
-db = chromadb.PersistentClient(path="./memory_db")
 
-# Or, if you just want in-memory (no persistence):
-# db = chromadb.Client()
-
-# Create or load collection
-memory_store = db.get_or_create_collection("memory")
 # ---------------- Setup ----------------
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -30,55 +22,6 @@ if not OPENROUTER_API_KEY:
 
 API_URL = "https://openrouter.ai/api/v1/chat/completions"
 
-headers_openrouter = {
-    "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-    "Content-Type": "application/json",
-}
-
-# Embedding model
-embedder = SentenceTransformer("all-MiniLM-L6-v2")
-
-# Persistent ChromaDB client
-chroma_client = chromadb.PersistentClient(path="./chroma_db")
-collection = chroma_client.get_or_create_collection(name="code_reviews")
-
-# ---------------- Memory Functions ----------------
-def add_to_memory(input_text: str, output_text: str, feedback: str = ""):
-    """Store (input, output, feedback) in ChromaDB"""
-    combined_text = f"INPUT: {input_text}\nOUTPUT: {output_text}\nFEEDBACK: {feedback}"
-    embedding = embedder.encode([combined_text]).tolist()[0]  # single vector
-    
-    # Add to Chroma collection
-    collection.add(
-        ids=[str(uuid.uuid4())],          # unique ID
-        documents=[combined_text],        # store the full text
-        embeddings=[embedding],           # vector
-        metadatas=[{"feedback": feedback}]  # optional metadata
-    )
-    
-    logger.info("Added memory to ChromaDB")
-
-
-def cosine_similarity(vec1, vec2):
-    v1, v2 = np.array(vec1), np.array(vec2)
-    return float(np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2)))
-
-def retrieve_memory(query: str, k: int = 1) -> List[str]:
-    """Retrieve top-k similar past cases from ChromaDB"""
-    
-    # Generate embedding for the query
-    query_embedding = embedder.encode([query]).tolist()[0]
-    
-    # Run similarity search in Chroma
-    results = collection.query(
-        query_embeddings=[query_embedding],
-        n_results=k
-    )
-    
-    # Extract matched documents
-    if results and "documents" in results:
-        return [doc for doc in results["documents"][0]]
-    return []
 
 
 # ---------------- Patch Parsing -------------------
@@ -263,13 +206,12 @@ def query_openrouter_focused(filename: str, patch: str, file_status: str) -> str
             return "No significant changes to review in this file."
         focused_prompt = create_focused_prompt(filename, file_status, changes, language)
 
-        memory_contexts = retrieve_memory(focused_prompt, k=2)
-        memory_text = "\n\n".join(memory_contexts) if memory_contexts else "No similar past reviews found."
+       
         payload = {
             "model": "qwen/qwen3-coder:free",
             "messages": [
                 {"role": "system", "content": f"You are an expert code reviewer specializing in {language}."},
-                {"role": "user", "content": f"{focused_prompt}\n\nPatch:\n```diff\n{patch}\n```Relevant Past Cases:\n{memory_text}"}
+                {"role": "user", "content": f"{focused_prompt}\n\nPatch:\n```diff\n{patch}\n"}
             ],
             "temperature": 0, "top_p": 1.0, "top_k": 0, "repetition_penalty": 1
         }
