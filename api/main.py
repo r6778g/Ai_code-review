@@ -34,7 +34,7 @@ app.add_middleware(
 
 # GitHub token setup
 
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+GITHUB_TOKEN = "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"
 if not GITHUB_TOKEN:
     raise ValueError("GITHUB_TOKEN environment variable is required")
 GITHUB_TOKEN = GITHUB_TOKEN.strip()
