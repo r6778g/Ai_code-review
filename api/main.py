@@ -195,6 +195,7 @@ async def github_webhook(request: Request):
         if all_reviews:
             comment_header = f"""# AI Code Review  **{pr_title}** (PR #{pr_number})  **Summary**: Analyzed {code_files_count} file(s) with targeted AI review.  """
             for reviews in all_reviews:
+                reviews=reviews.replace('\n','')
                 full_comment = json.loads(reviews)
                 logger.info(type(full_comment))
                 if len(full_comment) > 60000:
