@@ -157,7 +157,7 @@ async def github_webhook(request: Request):
         if action in ["closed", "locked", "unlocked"]:
             return {"message": f"Action {action} ignored"}
         files_url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/files"
-        headers = {"Authorization": f"token {token}"}
+        headers = {"Authorization": f"token {GITHUB_TOKEN}"}
         async with httpx.AsyncClient(timeout=60) as client:
             response = await client.get(files_url, headers=headers)
             if response.status_code != 200:
