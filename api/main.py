@@ -1,7 +1,6 @@
 from fastapi import FastAPI, Form, HTTPException, Request
 import os
 import requests
-import httpx
 import logging
 import traceback
 import re
@@ -10,7 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from typing import Dict, List, Tuple
 import numpy as np
-from .model import query_openrouter_focused, get_file_language
+from class_ import FeedbackInput
+from model import query_openrouter_focused, get_file_language
 import ast
 
 
@@ -27,15 +27,14 @@ last_full_comment = ""     # combined AI review
 # CORS setup
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://5ac3acbb3d43.ngrok-free.app"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
 # GitHub token setup
 
-GITHUB_TOKEN = "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"
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 if not GITHUB_TOKEN:
     raise ValueError("GITHUB_TOKEN environment variable is required")
 GITHUB_TOKEN = GITHUB_TOKEN.strip()
@@ -57,7 +56,7 @@ def str_to_dict(data_str):
 
 def get_pr_commit_sha(owner: str, repo: str, pr_number: int) -> str:
     url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}"
-    resp = requests.get(url, headers=headers_github, timeout=30)
+    resp = requests.get(url, headers=headers_github, timeout=45)
     resp.raise_for_status()
     pr_data = resp.json()
     return pr_data["head"]["sha"]
@@ -118,8 +117,7 @@ def should_review_file(filename: str, patch: str) -> bool:
     code_extensions = [
         '.py', '.js', '.jsx', '.ts', '.tsx', '.java', '.cpp', '.c', '.go',
         '.rs', '.php', '.rb', '.swift', '.kt', '.sql', '.css', '.scss',
-        '.html', '.vue', '.sh'
-    ]
+        '.html', '.vue', '.sh']
     if not any(filename.lower().endswith(ext) for ext in code_extensions):
         return False
     if len(patch.split('\n')) > 1000:
@@ -157,12 +155,14 @@ async def github_webhook(request: Request):
 
         if action in ["closed", "locked", "unlocked"]:
             return {"message": f"Action {action} ignored"}
+
+        # Fetch files
         files_url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/files"
-        headers = {"Authorization": f"token {GITHUB_TOKEN}"}
-        async with httpx.AsyncClient(timeout=60) as client:
-            response = await client.get(files_url, headers=headers)
-            if response.status_code != 200:
-                raise HTTPException(status_code=500, detail=f"Failed to fetch PR files: {response.text}")
+        logger.info(1)
+        response = requests.get(files_url, headers=headers_github, timeout=60)
+        if response.status_code != 200:
+            logger.info(2)
+            raise HTTPException(status_code=500, detail="Failed to fetch PR files")
 
         files = response.json()
         code_files_count = 0
@@ -186,6 +186,7 @@ async def github_webhook(request: Request):
             try:
                 
                 all_reviews.append(query_openrouter_focused(filename, patch, status))
+                logger.info(3)
                 ''' language = get_file_language(filename)
                 file_review = f"""## `{filename}` ({language})  **Status**: {status.title()} • **Changes**: +{additions}/-{deletions} lines  {review_content}  ---"""
                 all_reviews.append(file_review) '''
@@ -194,11 +195,15 @@ async def github_webhook(request: Request):
                 all_reviews.append(error_review)
 
         if all_reviews:
-            comment_header = f"""# AI Code Review  **{pr_title}** (PR #{pr_number})  **Summary**: Analyzed {code_files_count} file(s) with targeted AI review.  """
+            #comment_header = f"""# AI Code Review  **{pr_title}** (PR #{pr_number})  **Summary**: Analyzed {code_files_count} file(s) with targeted AI review.  """
             for reviews in all_reviews:
+                logger.info(4)
+                logger.info(type(reviews))
+                logger.info(reviews)
                 reviews=reviews.replace('\n','')
                 full_comment = json.loads(reviews)
-                logger.info(type(full_comment))
+                logger.info(6)
+                #logger.info(type(full_comment))
                 if len(full_comment) > 60000:
                     full_comment = full_comment[:60000] + "\n\n*⚠️ Truncated due to GitHub comment size limit*"
                 last_full_comment = full_comment
@@ -223,6 +228,8 @@ async def github_webhook(request: Request):
     except Exception as e:
         logger.error(f"Error processing webhook: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Webhook processing failed: {str(e)}")
+
+
 
 
 
