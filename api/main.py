@@ -33,7 +33,7 @@ app.add_middleware(
 
 # GitHub token setup
 
-GITHUB_TOKEN ="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" 
+GITHUB_TOKEN =os.getenv("GITHUB_TOKEN")
 if not GITHUB_TOKEN:
     raise ValueError("GITHUB_TOKEN environment variable is required")
 GITHUB_TOKEN = GITHUB_TOKEN.strip()
@@ -133,7 +133,24 @@ def should_review_file(filename: str, patch: str) -> bool:
         logger.info(f"Skipping {filename} - only formatting changes")
         return False
     return True
+@app.get("/check-token")
+def check_token():
+    token = os.getenv("GITHUB_TOKEN")
+    if not token:
+        return {"error": "❌ No token found"}
 
+    headers = {
+        "Authorization": f"token {token}",
+        "Accept": "application/vnd.github.v3+json",
+        "User-Agent": "Test-App"
+    }
+
+    r = requests.get("https://api.github.com/user", headers=headers)
+    return {
+        "status_code": r.status_code,
+        "response": r.json(),
+        "token_length": len(token)
+    }
 @app.post("/")
 async def github_webhook(request: Request):
     global last_patches, last_full_comment
@@ -156,7 +173,7 @@ async def github_webhook(request: Request):
             return {"message": f"Action {action} ignored"}
 
         # Fetch files
-        files_url = f"https://api.github.com/repos/r6778g/Sorting_Visualizer_mohit/pulls/227/files"
+        files_url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/files"
         logger.info(1)
         response = requests.get(files_url, headers=headers_github, timeout=60)
         if response.status_code != 200:
