@@ -26,14 +26,14 @@ last_full_comment = ""     # combined AI review
 # CORS setup
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://5ac3acbb3d43.ngrok-free.app"],
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # GitHub token setup
 
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+GITHUB_TOKEN ="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" 
 if not GITHUB_TOKEN:
     raise ValueError("GITHUB_TOKEN environment variable is required")
 GITHUB_TOKEN = GITHUB_TOKEN.strip()
