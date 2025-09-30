@@ -156,15 +156,12 @@ async def github_webhook(request: Request):
 
         if action in ["closed", "locked", "unlocked"]:
             return {"message": f"Action {action} ignored"}
-
-        # Fetch files
-    files_url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/files"
-    headers = {"Authorization": f"token {token}"}
-
-    async with httpx.AsyncClient(timeout=60) as client:
-        response = await client.get(files_url, headers=headers)
-        if response.status_code != 200:
-            raise HTTPException(status_code=500, detail=f"Failed to fetch PR files: {response.text}")
+        files_url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/files"
+        headers = {"Authorization": f"token {token}"}
+        async with httpx.AsyncClient(timeout=60) as client:
+            response = await client.get(files_url, headers=headers)
+            if response.status_code != 200:
+                raise HTTPException(status_code=500, detail=f"Failed to fetch PR files: {response.text}")
 
         files = response.json()
         code_files_count = 0
