@@ -21,6 +21,10 @@ if not OPENROUTER_API_KEY:
     raise ValueError("OPENROUTER_API_KEY environment variable is required")
 
 API_URL = "https://openrouter.ai/api/v1/chat/completions"
+headers_openrouter = {
+    "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+    "Content-Type": "application/json",
+}
 
 
 
