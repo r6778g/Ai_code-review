@@ -156,7 +156,7 @@ async def github_webhook(request: Request):
             return {"message": f"Action {action} ignored"}
 
         # Fetch files
-        files_url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/files"
+        files_url = f"https://api.github.com/repos/r6778g/Sorting_Visualizer_mohit/pulls/227/files"
         logger.info(1)
         response = requests.get(files_url, headers=headers_github, timeout=60)
         if response.status_code != 200:
