@@ -28,7 +28,7 @@ last_full_comment = ""     # combined AI review
 # CORS setup
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://5ac3acbb3d43.ngrok-free.app"],
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -40,7 +40,7 @@ app.add_middleware(
 APP_ID = os.getenv("GITHUB_APP_ID")
 
 # 2. Path to your private key (downloaded when creating the GitHub App)
-PRIVATE_KEY = os.getenv("GITHUB_PRIVATE_KEY").replace("\\n", "\n")
+PRIVATE_KEY = os.getenv("GITHUB_PRIVATE_KEY")
 
 def generate_jwt():
     """Generate a JWT for GitHub App authentication"""
