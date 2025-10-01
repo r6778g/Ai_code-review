@@ -38,7 +38,7 @@ app.add_middleware(
 
 # 1. Your GitHub App ID
 APP_ID = os.getenv("GITHUB_APP_ID")
-
+algorithm1=os.getenv("algorithm_name")
 # 2. Path to your private key (downloaded when creating the GitHub App)
 PRIVATE_KEY = os.getenv("GITHUB_PRIVATE_KEY")
 
@@ -54,7 +54,7 @@ def generate_jwt():
         "iss": APP_ID             # GitHub App ID
     }
 
-    encoded_jwt = jwt.encode(payload, private_key, algorithm="RS256")
+    encoded_jwt = jwt.encode(payload, private_key,algorithm="algorithm1")
     return encoded_jwt
 
 def get_installations(jwt_token):
