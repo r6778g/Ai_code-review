@@ -9,8 +9,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from typing import Dict, List, Tuple
 import numpy as np
+from class_ import FeedbackInput
 from .model import query_openrouter_focused, get_file_language
 import ast
+import time
+import jwt
 
 
 load_dotenv()
@@ -26,14 +29,72 @@ last_full_comment = ""     # combined AI review
 # CORS setup
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://5ac3acbb3d43.ngrok-free.app"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # GitHub token setup
 
-GITHUB_TOKEN =os.getenv("GITHUB_TOKEN")
+
+# 1. Your GitHub App ID
+APP_ID = os.getenv("GITHUB_APP_ID")
+
+# 2. Path to your private key (downloaded when creating the GitHub App)
+PRIVATE_KEY = os.getenv("GITHUB_PRIVATE_KEY").replace("\\n", "\n")
+
+def generate_jwt():
+    """Generate a JWT for GitHub App authentication"""
+    
+    private_key = PRIVATE_KEY 
+
+    now = int(time.time())
+    payload = {
+        "iat": now,               # issued at
+        "exp": now + (10 * 60),   # expires after 10 minutes
+        "iss": APP_ID             # GitHub App ID
+    }
+
+    encoded_jwt = jwt.encode(payload, private_key, algorithm="RS256")
+    return encoded_jwt
+
+def get_installations(jwt_token):
+    """Fetch installations for this GitHub App"""
+    headers = {
+        "Authorization": f"Bearer {jwt_token}",
+        "Accept": "application/vnd.github+json"
+    }
+    url = "https://api.github.com/app/installations"
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    return response.json()
+
+def get_installation_token(jwt_token, installation_id):
+    """Exchange JWT for an installation access token"""
+    headers = {
+        "Authorization": f"Bearer {jwt_token}",
+        "Accept": "application/vnd.github+json"
+    }
+    url = f"https://api.github.com/app/installations/{installation_id}/access_tokens"
+    response = requests.post(url, headers=headers)
+    response.raise_for_status()
+    return response.json()["token"]
+
+
+    # Step 1: Generate JWT
+jwt_token = generate_jwt()
+
+    # Step 2: Fetch installations
+installations = get_installations(jwt_token)
+    
+installation_id = installations[0]["id"]
+
+
+token = get_installation_token(jwt_token, installation_id)
+        
+
+
+GITHUB_TOKEN = token
 if not GITHUB_TOKEN:
     raise ValueError("GITHUB_TOKEN environment variable is required")
 GITHUB_TOKEN = GITHUB_TOKEN.strip()
@@ -48,7 +109,7 @@ def str_to_dict(data_str):
     if isinstance(data_str, (dict, list)):
         return data_str  # already parsed
     try:
-        return json.loads(data_str)   # JSON
+        return json.loads(data_str)# JSON
     except Exception:
         return ast.literal_eval(data_str)  # Python literal
 
@@ -133,24 +194,7 @@ def should_review_file(filename: str, patch: str) -> bool:
         logger.info(f"Skipping {filename} - only formatting changes")
         return False
     return True
-@app.get("/check-token")
-def check_token():
-    token = os.getenv("GITHUB_TOKEN")
-    if not token:
-        return {"error": "❌ No token found"}
 
-    headers = {
-        "Authorization": f"token {token}",
-        "Accept": "application/vnd.github.v3+json",
-        "User-Agent": "Test-App"
-    }
-
-    r = requests.get("https://api.github.com/user", headers=headers)
-    return {
-        "status_code": r.status_code,
-        "response": r.json(),
-        "token_length": len(token)
-    }
 @app.post("/")
 async def github_webhook(request: Request):
     global last_patches, last_full_comment
@@ -177,7 +221,7 @@ async def github_webhook(request: Request):
         logger.info(1)
         response = requests.get(files_url, headers=headers_github, timeout=60)
         if response.status_code != 200:
-            logger.info(response.text)
+            logger.info(2)
             raise HTTPException(status_code=500, detail="Failed to fetch PR files")
 
         files = response.json()
