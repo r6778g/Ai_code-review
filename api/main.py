@@ -54,7 +54,7 @@ def generate_jwt():
         "iss": APP_ID             # GitHub App ID
     }
 
-    encoded_jwt = jwt.encode(payload, private_key,algorithm=algorithm1)
+    encoded_jwt = jwt.encode(payload, private_key,algorithm="RS256")
     return encoded_jwt
 
 def get_installations(jwt_token):
