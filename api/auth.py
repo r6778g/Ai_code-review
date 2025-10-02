@@ -11,8 +11,7 @@ APP_ID = os.getenv("GITHUB_APP_ID")
 algorithm1=os.getenv("algorithm_name")
 
 # 2. Path to your private key (downloaded when creating the GitHub App)
-PRIVATE_KEY = os.getenv("GITHUB_PRIVATE_KEY").replace("\\n", "\n")
-
+PRIVATE_KEY = os.getenv("GITHUB_PRIVATE_KEY")
 def generate_jwt():
     """Generate a JWT for GitHub App authentication"""
     
