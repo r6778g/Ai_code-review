@@ -72,7 +72,7 @@ def str_to_dict(data_str):
 
 def get_pr_commit_sha(owner: str, repo: str, pr_number: int) -> str:
     url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}"
-    resp = requests.get(url, headers=headers_github, timeout=45)
+    resp = requests.get(url, headers=headers_github, timeout=240)
     resp.raise_for_status()
     pr_data = resp.json()
     return pr_data["head"]["sha"]
@@ -97,7 +97,7 @@ def post_review_comments(
                 "side": "RIGHT"               # comment on new code
             }
 
-            response = requests.post(url, headers=headers_github, json=payload, timeout=60)
+            response = requests.post(url, headers=headers_github, json=payload, timeout=360)
 
             if response.status_code == 201:
                 logger.info(f" Posted inline comment #{idx} on {c['file']} line {c['end_line']}")
