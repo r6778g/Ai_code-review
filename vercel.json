@@ -1,8 +1,10 @@
 {
   "version": 2,
-  "builds": [
-    { "src": "api/main.py", "use": "@vercel/python3.12" }
-  ],
+  "functions": {
+    "api/*.py": {
+      "runtime": "python3.12"
+    }
+  },
   "routes": [
     { "src": "/(.*)", "dest": "api/main.py" }
   ]
