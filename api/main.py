@@ -87,6 +87,7 @@ def post_review_comments(
     url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/comments"
     success_all = True
     commit_id = get_pr_commit_sha(owner, repo, pr_number)
+    logger.info(commit_id)
     for idx, c in enumerate(comments, start=1):
         try:
             payload = {
@@ -215,7 +216,6 @@ async def github_webhook(request: Request):
             for reviews in all_reviews:
                 logger.info(4)
                 logger.info(type(reviews))
-                logger.info(reviews)
                 reviews=reviews.replace('\n','')
                 full_comment = json.loads(reviews)
                 logger.info(6)
