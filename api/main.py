@@ -53,13 +53,15 @@ token = get_installation_token(jwt_token, installation_id)
 GITHUB_TOKEN = token
 if not GITHUB_TOKEN:
     raise ValueError("GITHUB_TOKEN environment variable is required")
-GITHUB_TOKEN = GITHUB_TOKEN.strip()
+
 
 headers_github = {
-    "Authorization": f"token {GITHUB_TOKEN}",
-    "Accept": "application/vnd.github.v3+json",
+    "Authorization": f"Bearer {GITHUB_TOKEN}",  # Changed from 'token' to 'Bearer'
+    "Accept": "application/vnd.github+json",     # Updated to modern format
+    "X-GitHub-Api-Version": "2022-11-28",        # Add API version
     "User-Agent": "GitHub-Webhook-Handler"
 }
+
 
 def str_to_dict(data_str):
     if isinstance(data_str, (dict, list)):
