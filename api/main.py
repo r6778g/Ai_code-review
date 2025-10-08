@@ -90,6 +90,7 @@ def post_review_comments(
     success_all = True
     commit_id = get_pr_commit_sha(owner, repo, pr_number)
     logger.info(commit_id)
+    logger.info(GITHUB_TOKEN)
     for idx, c in enumerate(comments, start=1):
         try:
             payload = {
