@@ -51,6 +51,7 @@ token = get_installation_token(jwt_token, installation_id)
 
 
 GITHUB_TOKEN = token
+logger.info(GITHUB_TOKEN)
 if not GITHUB_TOKEN:
     raise ValueError("GITHUB_TOKEN environment variable is required")
 
@@ -89,7 +90,7 @@ def post_review_comments(
     url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/comments"
     success_all = True
     commit_id = get_pr_commit_sha(owner, repo, pr_number)
-    logger.info(commit_id)
+    
     logger.info(GITHUB_TOKEN)
     for idx, c in enumerate(comments, start=1):
         try:
@@ -180,6 +181,7 @@ async def github_webhook(request: Request):
 
         token = get_installation_token(jwt_token, installation_id)
         GITHUB_TOKEN = token
+        logger.info(GITHUB_TOKEN)
         pr_number = pr_data["number"]
         pr_title = pr_data.get("title", "")
 
