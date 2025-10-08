@@ -36,7 +36,7 @@ app.add_middleware(
 
 # GitHub token setup
 
-
+APP_ID = os.getenv("GITHUB_APP_ID")
     # Step 1: Generate JWT
 jwt_token = generate_jwt()
 
@@ -44,7 +44,7 @@ jwt_token = generate_jwt()
 installations = get_installations(jwt_token)
     
 installation_id = installations[0]["id"]
-
+logger.info(installation_id)
 
 token = get_installation_token(jwt_token, installation_id)
         
@@ -59,7 +59,7 @@ headers_github = {
     "Authorization": f"Bearer {GITHUB_TOKEN}",  # Changed from 'token' to 'Bearer'
     "Accept": "application/vnd.github+json",     # Updated to modern format
     "X-GitHub-Api-Version": "2022-11-28",        # Add API version
-    "User-Agent": "GitHub-Webhook-Handler"
+    "User-Agent": f"GitHubApp/{APP_ID}"
 }
 
 
