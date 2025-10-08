@@ -183,6 +183,13 @@ async def github_webhook(request: Request):
 
         repo = payload["repository"]["name"]
         owner = payload["repository"]["owner"]["login"]
+        installation_id = payload["installation"]["id"]
+        
+        
+        logger.info(installation_id)
+
+        token = get_installation_token(jwt_token, installation_id)
+        GITHUB_TOKEN = token
         pr_number = pr_data["number"]
         pr_title = pr_data.get("title", "")
 
