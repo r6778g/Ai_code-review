@@ -159,6 +159,19 @@ def should_review_file(filename: str, patch: str) -> bool:
 async def github_webhook(request: Request):
     global last_patches, last_full_comment
     try:
+        jwt_token = generate_jwt()
+
+        # Step 2: Fetch installations
+        installations = get_installations(jwt_token)
+    
+        installation_id = installations[0]["id"]
+        logger.info(installation_id)
+
+        token = get_installation_token(jwt_token, installation_id)
+        
+
+
+        GITHUB_TOKEN = token
         payload = await request.json()
         if "pull_request" not in payload:
             return {"message": "Not a PR event"}
