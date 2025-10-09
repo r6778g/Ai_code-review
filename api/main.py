@@ -98,6 +98,7 @@ def post_review_comments(owner: str, repo: str, pr_number: int, comments: List[D
     url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/comments"
     success_all = True
     commit_id = get_pr_commit_sha(owner, repo, pr_number)
+    logger.info(comments)
 
     for idx, c in enumerate(comments, start=1):
         try:
