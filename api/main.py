@@ -94,32 +94,50 @@ def get_pr_commit_sha(owner: str, repo: str, pr_number: int) -> str:
 
 
 def post_review_comments(owner: str, repo: str, pr_number: int, comments: List[Dict]) -> bool:
-    """Post inline code review comments on PR 'Files changed' view."""
-    url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/comments"
+    """
+    Posts all review comments in one GitHub Create Review API call.
+    """
+
+    url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/reviews"
     success_all = True
-    commit_id = get_pr_commit_sha(owner, repo, pr_number)
-    logger.info(comments)
 
-    for idx, c in enumerate(comments, start=1):
-        try:
-            payload = {
-                "body": c["body"],
-                "commit_id": commit_id,
-                "path": c["file"],
-                "line": c["end_line"],
-                "side": "RIGHT"
-            }
-            response = requests.post(url, headers=headers_github, json=payload, timeout=60)
+    try:
+        # Fetch latest commit SHA
+        commit_id = get_pr_commit_sha(owner, repo, pr_number)
+        logger.info(f"Using commit ID: {commit_id}")
 
-            if response.status_code == 201:
-                logger.info(f"✅ Posted inline comment #{idx} on {c['file']} line {c['end_line']}")
-            else:
-                logger.error(f"❌ Failed comment #{idx}: {response.status_code} - {response.text}")
-                success_all = False
-        except Exception as e:
-            logger.error(f"⚠️ Error posting comment #{idx}: {str(e)}")
+        # Convert comments into required GitHub API format
+        review_comments = []
+        for c in comments:
+            review_comments.append({
+                "path": c["file"],      # e.g., "main.py"
+                "line": c["end_line"],  # line number in diff
+                "side": "RIGHT",        # comment on new code
+                "body": c["body"]
+            })
+
+        # Prepare single review payload
+        payload = {
+            "event": "COMMENT",
+            "commit_id": commit_id,
+            "comments": review_comments
+        }
+
+        # Send one single POST request
+        response = requests.post(url, headers=headers_github, json=payload, timeout=60)
+
+        if response.status_code == 200 or response.status_code == 201:
+            logger.info(f"✅ Successfully posted {len(review_comments)} review comments on PR #{pr_number}")
+        else:
+            logger.error(f"❌ Failed to post review: {response.status_code} - {response.text}")
             success_all = False
+
+    except Exception as e:
+        logger.error(f"⚠️ Exception while posting review: {str(e)}")
+        success_all = False
+
     return success_all
+
 
 
 def post_comment_to_pr(owner: str, repo: str, pr_number: int, comments_str: List[dict]) -> bool:
