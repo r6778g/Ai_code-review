@@ -99,7 +99,7 @@ def post_review_comments(
     comments: List[Dict],
 ) -> bool:
  
- def post_review_comments(owner, repo, pr_number, comments, batch_size=20):
+    batch_size=20
     url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/reviews"
     commit_id = get_pr_commit_sha(owner, repo, pr_number)
     success_all = True
