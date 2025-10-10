@@ -99,33 +99,44 @@ def post_review_comments(
     comments: List[Dict],
 ) -> bool:
  
-    url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/comments"
-    success_all = True
+ def post_review_comments(owner, repo, pr_number, comments, batch_size=20):
+    url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/reviews"
     commit_id = get_pr_commit_sha(owner, repo, pr_number)
+    success_all = True
     
-    logger.info(GITHUB_TOKEN)
-    for idx, c in enumerate(comments, start=1):
+    # Split into batches of N comments
+    for batch_idx in range(0, len(comments), batch_size):
+        batch = comments[batch_idx:batch_idx + batch_size]
+        logger.info(f"🧩 Sending batch {batch_idx // batch_size + 1} with {len(batch)} comments")
+
+        payload = {
+            "event": "COMMENT",
+            "comments": [
+                {
+                    "path": c["file"],
+                    "line": c["end_line"],
+                    "body": c["body"]
+                }
+                for c in batch
+            ],
+            "commit_id": commit_id
+        }
+
         try:
-            payload = {
-                "body": c["body"],
-                "commit_id": commit_id,
-                "path": c["file"],            # e.g., "style.css"
-                "line": c["end_line"],        # line in the diff (new code)
-                "side": "RIGHT"               # comment on new code
-            }
-
             response = requests.post(url, headers=headers_github, json=payload, timeout=60)
-
-            if response.status_code == 201:
-                logger.info(f" Posted inline comment #{idx} on {c['file']} line {c['end_line']}")
+            
+            if response.status_code == 200 or response.status_code == 201:
+                logger.info(f"✅ Batch {batch_idx // batch_size + 1} posted successfully")
             else:
-                logger.error(f" Failed comment #{idx}: {response.status_code} - {response.text}")
+                logger.error(f"❌ Batch {batch_idx // batch_size + 1} failed: {response.status_code} - {response.text}")
                 success_all = False
         except Exception as e:
-            logger.error(f"⚠️ Error posting comment #{idx}: {str(e)}")
+            logger.error(f"⚠️ Exception while posting batch {batch_idx // batch_size + 1}: {str(e)}")
             success_all = False
-
-    return success_all    
+        
+        # Delay to avoid rate limit / spam rejection
+        time.sleep(2)
+  
     return success_all       
 def post_comment_to_pr(owner: str, repo: str, pr_number: int, comments_str: List[dict]) -> bool:
     """Post a summary comment on the PR Conversation tab."""
