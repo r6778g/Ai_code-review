@@ -115,7 +115,8 @@ def post_review_comments(
                 {
                     "path": c["file"],
                     "line": c["end_line"],
-                    "body": c["body"]
+                    "body": c["body"],
+                    "side": "RIGHT",
                 }
                 for c in batch
             ],
