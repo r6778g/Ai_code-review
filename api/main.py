@@ -101,46 +101,31 @@ def post_review_comments(
  
     url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/comments"
     success_all = True
+    commit_id = get_pr_commit_sha(owner, repo, pr_number)
     
-    # Assuming get_pr_commit_sha, logger, headers_github are defined elsewhere
-  
-        commit_id = get_pr_commit_sha(owner, repo, pr_number)
-    
-    
+    logger.info(GITHUB_TOKEN)
     for idx, c in enumerate(comments, start=1):
-        # Validate required keys
-        required_keys = ['body', 'file', 'end_line']
-  
-        
         try:
             payload = {
                 "body": c["body"],
                 "commit_id": commit_id,
-                "path": c["file"],          # e.g., "style.css"
-                "line": c["end_line"],      # Must be a line in the diff
-                "side": "RIGHT"             # Adjust to "LEFT" if commenting on old code
+                "path": c["file"],            # e.g., "style.css"
+                "line": c["end_line"],        # line in the diff (new code)
+                "side": "RIGHT"               # comment on new code
             }
-            
+
             response = requests.post(url, headers=headers_github, json=payload, timeout=60)
-            
+
             if response.status_code == 201:
-               
-                    logger.info(f"📝 Posted inline comment #{idx} on `{c['file']}` line {c['end_line']}")
-            
+                logger.info(f" Posted inline comment #{idx} on {c['file']} line {c['end_line']}")
             else:
-                
-                    logger.error(f"❌ Failed comment #{idx}: {response.status_code} - {response.text}")
-         
+                logger.error(f" Failed comment #{idx}: {response.status_code} - {response.text}")
                 success_all = False
-        except requests.RequestException as e:
-            
-                logger.error(f"⚠️ Error posting comment #{idx}: {str(e)}")
-            
+        except Exception as e:
+            logger.error(f"⚠️ Error posting comment #{idx}: {str(e)}")
             success_all = False
-        
-        # Add delay to avoid rate limits (adjust as needed)
-        time.sleep(1)
-    
+
+    return success_all    
     return success_all       
 def post_comment_to_pr(owner: str, repo: str, pr_number: int, comments_str: List[dict]) -> bool:
     """Post a summary comment on the PR Conversation tab."""
