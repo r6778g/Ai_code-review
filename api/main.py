@@ -92,76 +92,41 @@ def get_pr_commit_sha(owner: str, repo: str, pr_number: int) -> str:
     pr_data = resp.json()
     return pr_data["head"]["sha"]
 
-def post_review_comments(owner: str, repo: str, pr_number: int, comments: List[Dict]) -> bool:
-    """
-    Create one pending PR review and append all general comments to it.
-    If 'file' info exists in the comment, post it inline; otherwise, post as a general note.
-    """
 
-    base_url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/reviews"
+def post_review_comments(
+    owner: str,
+    repo: str,
+    pr_number: int,
+    comments: List[Dict],
+) -> bool:
+ 
+    url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/comments"
     success_all = True
+    commit_id = get_pr_commit_sha(owner, repo, pr_number)
+    
+    logger.info(GITHUB_TOKEN)
+    for idx, c in enumerate(comments, start=1):
+        try:
+            payload = {
+                "body": c["body"],
+                "commit_id": commit_id,
+                "path": c["file"],            # e.g., "style.css"
+                "line": c["end_line"],        # line in the diff (new code)
+                "side": "RIGHT"               # comment on new code
+            }
 
-    try:
-        review_comments = []
-        for c in comments:
-            body = c.get("body", "").strip()
-            if not body:
-                continue
+            response = requests.post(url, headers=headers_github, json=payload, timeout=60)
 
-            # if file info available, attach inline
-            if "file" in c and "end_line" in c:
-                review_comments.append({
-                    "path": c["file"],
-                    "position": c.get("position", c["end_line"]),
-                    "body": body,
-                })
+            if response.status_code == 201:
+                logger.info(f" Posted inline comment #{idx} on {c['file']} line {c['end_line']}")
             else:
-                # general review comment (not inline)
-                review_comments.append({
-                    "path": None,
-                    "position": None,
-                    "body": body,
-                })
-
-        # prepare review payload
-        review_payload = {
-            "body": "Automated Code Review Summary",
-            "event": "COMMENT",   # keeps review pending
-            "comments": [
-                {
-                    "path": rc["path"],
-                    "position": rc["position"],
-                    "body": rc["body"]
-                }
-                for rc in review_comments if rc["path"] is not None
-            ],
-        }
-
-        # post inline review comments (if any)
-        if any(rc["path"] for rc in review_comments):
-            response = requests.post(base_url, headers=headers_github, json=review_payload, timeout=30)
-            if response.status_code != 200:
-                logger.error(f"❌ Inline review failed: {response.status_code} - {response.text}")
+                logger.error(f" Failed comment #{idx}: {response.status_code} - {response.text}")
                 success_all = False
+        except Exception as e:
+            logger.error(f"⚠️ Error posting comment #{idx}: {str(e)}")
+            success_all = False
 
-        # post general comments (Conversation tab)
-        issue_url = f"https://api.github.com/repos/{owner}/{repo}/issues/{pr_number}/comments"
-        for rc in review_comments:
-            if rc["path"] is None:
-                payload = {"body": rc["body"]}
-                r = requests.post(issue_url, headers=headers_github, json=payload, timeout=30)
-                if r.status_code == 201:
-                    logger.info("✅ Posted general review comment")
-                else:
-                    logger.error(f"❌ Failed general comment: {r.status_code} - {r.text}")
-                    success_all = False
-
-    except Exception as e:
-        logger.error(f"⚠️ Exception while posting review: {traceback.format_exc()}")
-        success_all = False
-
-    return success_all
-
+    return success_all       
 def post_comment_to_pr(owner: str, repo: str, pr_number: int, comments_str: List[dict]) -> bool:
     """Post a summary comment on the PR Conversation tab."""
     url = f"https://api.github.com/repos/{owner}/{repo}/issues/{pr_number}/comments"
