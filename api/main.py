@@ -115,7 +115,7 @@ def post_review_comments(
                 "side": "RIGHT"               # comment on new code
             }
 
-            response = requests.post(url, headers=headers_github, json=payload, timeout=60)
+            response = requests.patch(url, headers=headers_github, json=payload, timeout=60)
 
             if response.status_code == 201:
                 logger.info(f" Posted inline comment #{idx} on {c['file']} line {c['end_line']}")
