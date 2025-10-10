@@ -92,7 +92,6 @@ def get_pr_commit_sha(owner: str, repo: str, pr_number: int) -> str:
     pr_data = resp.json()
     return pr_data["head"]["sha"]
 
-
 def post_review_comments(
     owner: str,
     repo: str,
@@ -102,30 +101,81 @@ def post_review_comments(
  
     url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/comments"
     success_all = True
-    commit_id = get_pr_commit_sha(owner, repo, pr_number)
     
-    logger.info(GITHUB_TOKEN)
+    # Assuming get_pr_commit_sha, logger, headers_github are defined elsewhere
+    try:
+        commit_id = get_pr_commit_sha(owner, repo, pr_number)
+    except NameError:
+        print("Error: get_pr_commit_sha function is not defined.")
+        return False
+    
+    if not headers_github:
+        print("Error: headers_github is not defined.")
+        return False
+    
+    if not logger:
+        print("Warning: logger not defined, using print instead.")
+        logger = None
+    
     for idx, c in enumerate(comments, start=1):
+        # Validate required keys
+        required_keys = ['body', 'file', 'end_line']
+        if not all(key in c for key in required_keys):
+            if logger:
+                logger.error(f"⚠️ Comment #{idx} missing required keys: {required_keys}")
+            else:
+                print(f"⚠️ Comment #{idx} missing required keys: {required_keys}")
+            success_all = False
+            continue
+        
+        # Additional checks: non-empty body, valid commit_id length (SHAs are 40 chars)
+        if not isinstance(c["body"], str) or not c["body"].strip():
+            if logger:
+                logger.error(f"⚠️ Comment #{idx} has empty or invalid body.")
+            else:
+                print(f"⚠️ Comment #{idx} has empty or invalid body.")
+            success_all = False
+            continue
+        if not isinstance(commit_id, str) or len(commit_id) != 40:
+            if logger:
+                logger.error(f"⚠️ Invalid commit_id: {commit_id}")
+            else:
+                print(f"⚠️ Invalid commit_id: {commit_id}")
+            success_all = False
+            continue
+        
         try:
             payload = {
                 "body": c["body"],
                 "commit_id": commit_id,
-                "path": c["file"],            # e.g., "style.css"
-                "line": c["end_line"],        # line in the diff (new code)
-                "side": "RIGHT"               # comment on new code
+                "path": c["file"],          # e.g., "style.css"
+                "line": c["end_line"],      # Must be a line in the diff
+                "side": "RIGHT"             # Adjust to "LEFT" if commenting on old code
             }
-
-            response = requests.patch(url, headers=headers_github, json=payload, timeout=60)
-
+            
+            response = requests.post(url, headers=headers_github, json=payload, timeout=60)
+            
             if response.status_code == 201:
-                logger.info(f" Posted inline comment #{idx} on {c['file']} line {c['end_line']}")
+                if logger:
+                    logger.info(f"📝 Posted inline comment #{idx} on `{c['file']}` line {c['end_line']}")
+                else:
+                    print(f"📝 Posted inline comment #{idx} on `{c['file']}` line {c['end_line']}")
             else:
-                logger.error(f" Failed comment #{idx}: {response.status_code} - {response.text}")
+                if logger:
+                    logger.error(f"❌ Failed comment #{idx}: {response.status_code} - {response.text}")
+                else:
+                    print(f"❌ Failed comment #{idx}: {response.status_code} - {response.text}")
                 success_all = False
-        except Exception as e:
-            logger.error(f"⚠️ Error posting comment #{idx}: {str(e)}")
+        except requests.RequestException as e:
+            if logger:
+                logger.error(f"⚠️ Error posting comment #{idx}: {str(e)}")
+            else:
+                print(f"⚠️ Error posting comment #{idx}: {str(e)}")
             success_all = False
-
+        
+        # Add delay to avoid rate limits (adjust as needed)
+        time.sleep(1)
+    
     return success_all       
 def post_comment_to_pr(owner: str, repo: str, pr_number: int, comments_str: List[dict]) -> bool:
     """Post a summary comment on the PR Conversation tab."""
