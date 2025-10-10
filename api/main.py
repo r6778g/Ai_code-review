@@ -98,47 +98,51 @@ def post_review_comments(
     pr_number: int,
     comments: List[Dict],
 ) -> bool:
- 
-    batch_size=20
+    """
+    Posts PR review comments in batches (each batch = one review).
+    """
     url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/reviews"
-    commit_id = get_pr_commit_sha(owner, repo, pr_number)
     success_all = True
-    
-    # Split into batches of N comments
-    for batch_idx in range(0, len(comments), batch_size):
-        batch = comments[batch_idx:batch_idx + batch_size]
-        logger.info(f"🧩 Sending batch {batch_idx // batch_size + 1} with {len(batch)} comments")
+    commit_id = get_pr_commit_sha(owner, repo, pr_number)
 
-        payload = {
-            "event": "COMMENT",
-            "comments": [
-                {
-                    "path": c["file"],
-                    "line": c["end_line"],
-                    "body": c["body"],
-                    "side": "RIGHT",
-                }
-                for c in batch
-            ],
-            "commit_id": commit_id
-        }
+    logger.info(f"🔑 Using commit SHA: {commit_id}")
 
+    for idx, c in enumerate(comments, start=1):
         try:
+            # Format each comment properly
+            review_comment = {
+                "path": c["file"],        # must match PR file path
+                "line": c["end_line"],    # line number in new code (not 'position')
+                "side": "RIGHT",
+                "body": c["body"]
+            }
+
+            # Build review payload (one batch = one review)
+            payload = {
+                "body": f"🤖 Automated review batch #{idx}",
+                "event": "COMMENT",
+                "comments": [review_comment]  # must be a list!
+            }
+
             response = requests.post(url, headers=headers_github, json=payload, timeout=60)
-            
-            if response.status_code == 200 or response.status_code == 201:
-                logger.info(f"✅ Batch {batch_idx // batch_size + 1} posted successfully")
+
+            if response.status_code == 200:
+                logger.info(f"✅ Posted review #{idx} on {c['file']} line {c['end_line']}")
             else:
-                logger.error(f"❌ Batch {batch_idx // batch_size + 1} failed: {response.status_code} - {response.text}")
+                logger.error(f"❌ Batch {idx} failed: {response.status_code} - {response.text}")
                 success_all = False
-        except Exception as e:
-            logger.error(f"⚠️ Exception while posting batch {batch_idx // batch_size + 1}: {str(e)}")
+
+            # Prevent API spam (recommended by GitHub)
+            time.sleep(2)
+
+        except KeyError as e:
+            logger.error(f"⚠️ Missing key in comment #{idx}: {str(e)} → {c}")
             success_all = False
-        
-        # Delay to avoid rate limit / spam rejection
-        time.sleep(2)
-  
-    return success_all       
+        except Exception as e:
+            logger.error(f"⚠️ Exception while posting review #{idx}: {str(e)}")
+            success_all = False
+
+    return success_all     
 def post_comment_to_pr(owner: str, repo: str, pr_number: int, comments_str: List[dict]) -> bool:
     """Post a summary comment on the PR Conversation tab."""
     url = f"https://api.github.com/repos/{owner}/{repo}/issues/{pr_number}/comments"
