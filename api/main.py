@@ -103,46 +103,14 @@ def post_review_comments(
     success_all = True
     
     # Assuming get_pr_commit_sha, logger, headers_github are defined elsewhere
-    try:
+  
         commit_id = get_pr_commit_sha(owner, repo, pr_number)
-    except NameError:
-        print("Error: get_pr_commit_sha function is not defined.")
-        return False
     
-    if not headers_github:
-        print("Error: headers_github is not defined.")
-        return False
-    
-    if not logger:
-        print("Warning: logger not defined, using print instead.")
-        logger = None
     
     for idx, c in enumerate(comments, start=1):
         # Validate required keys
         required_keys = ['body', 'file', 'end_line']
-        if not all(key in c for key in required_keys):
-            if logger:
-                logger.error(f"⚠️ Comment #{idx} missing required keys: {required_keys}")
-            else:
-                print(f"⚠️ Comment #{idx} missing required keys: {required_keys}")
-            success_all = False
-            continue
-        
-        # Additional checks: non-empty body, valid commit_id length (SHAs are 40 chars)
-        if not isinstance(c["body"], str) or not c["body"].strip():
-            if logger:
-                logger.error(f"⚠️ Comment #{idx} has empty or invalid body.")
-            else:
-                print(f"⚠️ Comment #{idx} has empty or invalid body.")
-            success_all = False
-            continue
-        if not isinstance(commit_id, str) or len(commit_id) != 40:
-            if logger:
-                logger.error(f"⚠️ Invalid commit_id: {commit_id}")
-            else:
-                print(f"⚠️ Invalid commit_id: {commit_id}")
-            success_all = False
-            continue
+  
         
         try:
             payload = {
@@ -156,21 +124,18 @@ def post_review_comments(
             response = requests.post(url, headers=headers_github, json=payload, timeout=60)
             
             if response.status_code == 201:
-                if logger:
+               
                     logger.info(f"📝 Posted inline comment #{idx} on `{c['file']}` line {c['end_line']}")
-                else:
-                    print(f"📝 Posted inline comment #{idx} on `{c['file']}` line {c['end_line']}")
+            
             else:
-                if logger:
+                
                     logger.error(f"❌ Failed comment #{idx}: {response.status_code} - {response.text}")
-                else:
-                    print(f"❌ Failed comment #{idx}: {response.status_code} - {response.text}")
+         
                 success_all = False
         except requests.RequestException as e:
-            if logger:
+            
                 logger.error(f"⚠️ Error posting comment #{idx}: {str(e)}")
-            else:
-                print(f"⚠️ Error posting comment #{idx}: {str(e)}")
+            
             success_all = False
         
         # Add delay to avoid rate limits (adjust as needed)
