@@ -299,6 +299,7 @@ async def github_webhook(request: Request):
         success = False
         if all_reviews:
             for review in all_reviews:
+                review=review.replace('\n','')
                 success = post_review_comments(owner, repo, pr_number, review)
                 last_full_comment = review
 
