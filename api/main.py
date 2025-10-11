@@ -85,64 +85,97 @@ def str_to_dict(data_str):
 
 
 def get_pr_commit_sha(owner: str, repo: str, pr_number: int) -> str:
-    """Fetch the latest commit SHA for a pull request."""
+    """Fetch the latest commit SHA for a PR."""
     url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}"
-    resp = requests.get(url, headers=headers_github, timeout=45)
-    resp.raise_for_status()
-    pr_data = resp.json()
-    return pr_data["head"]["sha"]
+    response = requests.get(url, headers=headers_github, timeout=60)
+    response.raise_for_status()
+    data = response.json()
+    return data["head"]["sha"]
+
+
+def find_file_path_in_pr(owner: str, repo: str, pr_number: int, filename: str) -> str:
+    """
+    Find and return the exact file path in the PR that matches a given filename.
+    Example: filename='Profile.css' → returns 'frontend/src/Components/Profile.css'
+    """
+    url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/files"
+    response = requests.get(url, headers=headers_github, timeout=60)
+    response.raise_for_status()
+    files = response.json()
+
+    for f in files:
+        if f["filename"].endswith(filename):
+            return f["filename"]
+
+    logger.warning(f"⚠️ File '{filename}' not found in PR #{pr_number}")
+    return None
+
 
 def post_review_comments(
     owner: str,
     repo: str,
     pr_number: int,
-    comments: List[Dict],
+    comments: List[Dict]
 ) -> bool:
     """
-    Posts PR review comments in batches (each batch = one review).
+    Posts all PR review comments in a single review (payload outside loop).
     """
+
+
     url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/reviews"
     success_all = True
     commit_id = get_pr_commit_sha(owner, repo, pr_number)
-
     logger.info(f"🔑 Using commit SHA: {commit_id}")
+
+    formatted_comments = []
 
     for idx, c in enumerate(comments, start=1):
         try:
-            # Format each comment properly
-            review_comment = {
-                "path": c["file"],        # must match PR file path
-                "line": c["end_line"],    # line number in new code (not 'position')
-                "side": "RIGHT",
-                "body": c["body"]
-            }
+            # Auto-resolve path
+            file_path = c.get("file")
+            if not file_path or "/" not in file_path:
+                file_path = find_file_path_in_pr(owner, repo, pr_number, c["file"])
 
-            # Build review payload (one batch = one review)
-            payload = {
-                "body": f"🤖 Automated review batch #{idx}",
-                "event": "COMMENT",
-                "comments": [review_comment]  # must be a list!
-            }
-
-            response = requests.post(url, headers=headers_github, json=payload, timeout=60)
-
-            if response.status_code == 200:
-                logger.info(f"✅ Posted review #{idx} on {c['file']} line {c['end_line']}")
-            else:
-                logger.error(f"❌ Batch {idx} failed: {response.status_code} - {response.text}")
+            if not file_path:
+                logger.error(f"⚠️ Could not find matching file for comment #{idx}: {c}")
                 success_all = False
+                continue
 
-            # Prevent API spam (recommended by GitHub)
-            time.sleep(2)
+            formatted_comments.append({
+                "path": file_path,
+                "line": c["end_line"],
+                "side": "RIGHT",
+                "body": c["body"],
+            })
 
         except KeyError as e:
             logger.error(f"⚠️ Missing key in comment #{idx}: {str(e)} → {c}")
             success_all = False
         except Exception as e:
-            logger.error(f"⚠️ Exception while posting review #{idx}: {str(e)}")
+            logger.error(f"⚠️ Exception while preparing comment #{idx}: {str(e)}")
             success_all = False
 
-    return success_all     
+    # ✅ One single payload for all comments
+    payload = {
+        "commit_id": commit_id,
+        "body": "🤖 Automated AI Code Review Summary",
+        "event": "COMMENT",
+        "comments": formatted_comments,
+    }
+
+
+
+    # ✅ Send all comments in one review
+    response = requests.post(url, headers=headers_github, json=payload, timeout=60)
+
+    if response.status_code == 201:
+        logger.info(f"✅ Successfully posted {len(formatted_comments)} comments in one review.")
+    else:
+        logger.error(f"❌ Review failed: {response.status_code} - {response.text}")
+        success_all = False
+
+    return success_all
+   
 def post_comment_to_pr(owner: str, repo: str, pr_number: int, comments_str: List[dict]) -> bool:
     """Post a summary comment on the PR Conversation tab."""
     url = f"https://api.github.com/repos/{owner}/{repo}/issues/{pr_number}/comments"
