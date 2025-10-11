@@ -215,7 +215,7 @@ def query_openrouter_focused(filename: str, patch: str, file_status: str) -> str
             "model": "meta-llama/llama-3.3-70b-instruct:free",
             "messages": [
                 {"role": "system", "content": f"You are an expert code reviewer specializing in {language}."},
-                {"role": "user", "content": f"{focused_prompt}\n\nPatch:\n```diff\n{patch}\n"}
+                {"role": "user", "content": f"{focused_prompt}\n\nPatch:\n```diff\n{patch}\n  {filename}"}
             ],
             "temperature": 0, "top_p": 1.0, "top_k": 0, "repetition_penalty": 1
         }
