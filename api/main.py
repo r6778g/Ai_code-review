@@ -143,7 +143,7 @@ def post_review_comments(
 
             formatted_comments.append({
                 "path": file_path,
-                "line": c["end_line"],
+                "position": c["end_line"],
                 "side": "RIGHT",
                 "body": c["body"],
             })
