@@ -103,6 +103,7 @@ def find_file_path_in_pr(owner: str, repo: str, pr_number: int, filename: str) -
     response.raise_for_status()
     files = response.json()
     logger.info(files["filename"])
+    logger.info(files)
     return files["filename"]
 
 
