@@ -212,7 +212,7 @@ def query_openrouter_focused(filename: str, patch: str, file_status: str) -> str
 
        
         payload = {
-            "model": "z-ai/glm-4.5-air:free",
+            "model": "meta-llama/llama-3.3-70b-instruct:free",
             "messages": [
                 {"role": "system", "content": f"You are an expert code reviewer specializing in {language}."},
                 {"role": "user", "content": f"{focused_prompt}\n\nPatch:\n```diff\n{patch}\n"}
