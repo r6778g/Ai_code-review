@@ -102,8 +102,8 @@ def find_file_path_in_pr(owner: str, repo: str, pr_number: int, filename: str) -
     response = requests.get(url, headers=headers_github, timeout=60)
     response.raise_for_status()
     files = response.json()
-    logger.info(files[filename])
-    return files
+    logger.info(files["filename"])
+    return files["filename"]
 
 
 def post_review_comments(
