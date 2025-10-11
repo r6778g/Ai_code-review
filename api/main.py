@@ -290,6 +290,7 @@ async def github_webhook(request: Request):
 
             try:
                 review_json = query_openrouter_focused(filename, patch, status)
+                 review_json = review_json .replace('\n','')
                 parsed_review = json.loads(review_json)
                 all_reviews.append(parsed_review)
             except Exception as e:
@@ -299,7 +300,7 @@ async def github_webhook(request: Request):
         success = False
         if all_reviews:
             for review in all_reviews:
-                review=review.replace('\n','')
+                
                 success = post_review_comments(owner, repo, pr_number, review)
                 last_full_comment = review
 
