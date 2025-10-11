@@ -92,7 +92,6 @@ def get_pr_commit_sha(owner: str, repo: str, pr_number: int) -> str:
     data = response.json()
     return data["head"]["sha"]
 
-
 def find_file_path_in_pr(owner: str, repo: str, pr_number: int, filename: str) -> str:
     """
     Find and return the exact file path in the PR that matches a given filename.
@@ -101,10 +100,19 @@ def find_file_path_in_pr(owner: str, repo: str, pr_number: int, filename: str) -
     url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/files"
     response = requests.get(url, headers=headers_github, timeout=60)
     response.raise_for_status()
+
     files = response.json()
-    logger.info(files["filename"])
-    logger.info(files)
-    return files["filename"]
+    logger.info(f"🔍 Searching for file '{filename}' in PR #{pr_number}...")
+
+    for f in files:
+        file_path = f.get("filename", "")
+        if file_path.endswith(filename):  # check if file matches
+            logger.info(f"✅ Found path: {file_path}")
+            return file_path
+
+    logger.warning(f"⚠️ File '{filename}' not found in PR #{pr_number}")
+    return None
+
 
 
 def post_review_comments(
