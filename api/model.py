@@ -212,7 +212,7 @@ def query_openrouter_focused(filename: str, patch: str, file_status: str) -> str
 
        
         payload = {
-            "model": "qwen/qwen3-235b-a22b:free",
+            "model": "deepseek/deepseek-chat-v3-0324:free",
             "messages": [
                 {"role": "system", "content": f"You are an expert code reviewer specializing in {language}."},
                 {"role": "user", "content": f"{focused_prompt}\n\nPatch:\n```diff\n{patch}\n"}
