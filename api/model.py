@@ -134,20 +134,7 @@ Boundary conditions: Test minimum/maximum values
 Resource cleanup: Proper file/connection closing
 Graceful degradation: Fallback behavior when things fail
 
-Dependencies & Imports
-Remove unused imports: Clean up dead code
-Pin dependency versions: Avoid "latest" in production
-Minimize dependencies: Only include what's necessary
-Security updates: Keep dependencies current for vulnerabilities
-Import organization: Group standard, third-party, and local imports
 
-Documentation & Comments
-
-Docstrings: Function/class purpose, parameters, return values
-Inline comments: Explain complex logic, not obvious code
-Type hints: Parameter and return types (Python, TypeScript)
-API documentation: Clear interface contracts
-README files: Setup, usage, and contribution guidelines
 
 Maintainability & Design
 DRY principle: Don't Repeat Yourself - extract common code
@@ -156,21 +143,7 @@ Simplify complex logic: Break down large functions
 Consistent patterns: Use established project conventions
 Modular design: Loose coupling, high cohesion
 
-Security & Performance
-SQL injection: Use parameterized queries
-XSS prevention: Sanitize user inputs
-Authentication: Proper user verification
-Data exposure: Don't log sensitive information
-Performance bottlenecks: Identify inefficient algorithms/queries
-Memory leaks: Proper resource management
 
-Testing & Quality
-
-Test coverage: Unit tests for critical functionality
-Test quality: Edge cases, error conditions
-Test maintainability: Clear, isolated test cases
-Integration testing: Component interaction verification
-Code metrics: Cyclomatic complexity, maintainability index
 
 ### Guidelines
 Be specific: include filename and line numbers
@@ -178,6 +151,8 @@ Be constructive: explain issues in a helpful tone
 Be concise: no over-explaining
 Show diff format fixes whenever possible
 Ensure start_line and end_line are valid PR diff lines
+ red color (<span style="color:red;">...</span>) for errors, bugs, or bad practices.
+ green color (<span style="color:green;">...</span>) for good improvements, optimizations, or best practices.
 
 
 Example Review Output (JSON Style)
