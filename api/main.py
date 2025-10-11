@@ -102,6 +102,7 @@ def find_file_path_in_pr(owner: str, repo: str, pr_number: int, filename: str) -
     response = requests.get(url, headers=headers_github, timeout=60)
     response.raise_for_status()
     files = response.json()
+    logger.info(files)
     return files
 
 
@@ -125,15 +126,9 @@ def post_review_comments(
 
     for idx, c in enumerate(comments, start=1):
         try:
-            # Auto-resolve path
-            file_path = c.get("file")
-            if not file_path or "/" not in file_path:
+            # Auto-resolve 
+            
                 file_path = find_file_path_in_pr(owner, repo, pr_number, c["file"])
-
-            if not file_path:
-                logger.error(f"⚠️ Could not find matching file for comment #{idx}: {c}")
-                success_all = False
-                continue
 
             formatted_comments.append({
                 "path": file_path,
