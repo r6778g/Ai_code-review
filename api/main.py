@@ -138,13 +138,10 @@ def post_review_comments(
             # Auto-resolve 
             
             file_path = find_file_path_in_pr(owner, repo, pr_number, c["file"])
-            logger.info(1)
-            logger.info(file_path)
 
             formatted_comments.append({
                 "path": file_path,
                 "position": c["end_line"],
-                "side": "RIGHT",
                 "body": c["body"],
             })
 
