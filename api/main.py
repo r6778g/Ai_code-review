@@ -102,13 +102,7 @@ def find_file_path_in_pr(owner: str, repo: str, pr_number: int, filename: str) -
     response = requests.get(url, headers=headers_github, timeout=60)
     response.raise_for_status()
     files = response.json()
-
-    for f in files:
-        if f["filename"].endswith(filename):
-            return f["filename"]
-
-    logger.warning(f"⚠️ File '{filename}' not found in PR #{pr_number}")
-    return None
+    return files
 
 
 def post_review_comments(
