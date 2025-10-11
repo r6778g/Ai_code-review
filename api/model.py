@@ -227,7 +227,7 @@ def query_openrouter_focused(filename: str, patch: str, file_status: str) -> str
             return "**Review Error**: API error."
         response_data = response.json()
         if 'choices' in response_data and response_data['choices']:
-            logger.info(response_data['choices'][0]['message']['content'])
+            
             return response_data['choices'][0]['message']['content']
             
         else:
