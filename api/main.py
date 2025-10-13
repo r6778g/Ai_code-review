@@ -7,13 +7,15 @@ import re
 import json
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple,Optional
 import numpy as np
 from .model import query_openrouter_focused, get_file_language
 import ast
 import time
 import jwt
 from .auth import generate_jwt, get_installations, get_installation_token
+import html
+
 
 # ==============================
 # Environment & Logging
@@ -74,14 +76,73 @@ last_full_comment = ""
 # ==============================
 # Utility Functions
 # ==============================
-def str_to_dict(data_str):
-    """Safely convert JSON or Python literal string to dict."""
-    if isinstance(data_str, (dict, list)):
-        return data_str
-    try:
-        return json.loads(data_str)
-    except Exception:
-        return ast.literal_eval(data_str)
+import html
+from typing import Optional
+
+def string_to_html_text(s: str) -> str:
+  
+    lines = s.splitlines()
+    out_parts = []
+    in_fence = False
+    fence_lang: Optional[str] = None
+
+    for line in lines:
+        if line.startswith("```"):  
+            if not in_fence:
+                in_fence = True
+                fence_lang = line[3:].strip() or None
+                lang_class = f' class="language-{html.escape(fence_lang)}"' if fence_lang else ""
+                out_parts.append(f'<pre class="code-block"><code{lang_class}>')
+            else:
+                in_fence = False
+                fence_lang = None
+                out_parts.append('</code></pre>')
+            continue
+
+        if in_fence:
+            # inside code fence: escape but keep raw formatting (pre + code preserve whitespace)
+            out_parts.append(html.escape(line))
+        else:
+            esc = html.escape(line)
+            # mark diff lines
+            if esc.startswith('+'):
+                out_parts.append(f'<span class="diff-add">{esc}</span>')
+            elif esc.startswith('-'):
+                out_parts.append(f'<span class="diff-del">{esc}</span>')
+            else:
+                # normal line (escaped)
+                out_parts.append(esc)
+
+    # if user forgot to close fence, close it to keep valid HTML
+    if in_fence:
+        out_parts.append('</code></pre>')
+
+    body = '\n'.join(out_parts)
+
+    css = """
+<style>
+/* container preserves whitespace and monospace look */
+.diff-container { white-space: pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace; }
+
+/* diff lines */
+.diff-add { display:block; background:#e9f7ee; color:#034d22; border-left:4px solid #29a745; margin:2px 0; padding:2px 6px; }
+.diff-del { display:block; background:#fff0f0; color:#7a0e0e; border-left:4px solid #e55353; margin:2px 0; padding:2px 6px; }
+
+/* fenced code blocks */
+pre.code-block {
+  background:#f6f8fa;
+  border-radius:6px;
+  padding:10px;
+  margin:6px 0;
+  overflow:auto;
+}
+pre.code-block code { display:block; white-space: pre; }
+</style>
+"""
+
+    html_fragment = f'{css}<div class="diff-container">{body}</div>'
+    return html_fragment
+
 
 
 def get_pr_commit_sha(owner: str, repo: str, pr_number: int) -> str:
@@ -142,7 +203,7 @@ def post_review_comments(
             formatted_comments.append({
                 "path": file_path,
                 "position": c["end_line"],
-                "body": c["body"],
+                "body": string_to_html_text(c["body"]),
             })
 
         except KeyError as e:
