@@ -213,7 +213,7 @@ def post_review_comments(
             formatted_comments.append({
                 "path": file_path,
                 "position": c["end_line"],
-                "body": format_snippet_for_github(c["body"]),
+                "body": format_snippet_for_terminal(c["body"]),
             })
 
         except KeyError as e:
