@@ -150,8 +150,8 @@ Be specific: include filename and line numbers
 Be constructive: explain issues in a helpful tone
 Be concise: no over-explaining
 Show diff format fixes whenever possible
-Always place @ at the very end of every line.
-Do not append @ to lines ending with ] and "
+(Always place @ at the very end of every line.
+Do not append @ to lines ending with ] and "  ...only for json body appliend this rules.)
 Ensure start_line and end_line are valid PR diff lines
 + lines in a diff appear green
 - lines in a diff appear red
