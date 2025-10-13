@@ -76,11 +76,10 @@ last_full_comment = ""
 # ==============================
 # Utility Functions
 # ==============================
-def format_snippet_for_github(raw_text: str) -> str:
+def format_snippet_for_terminal(raw_text: str) -> str:
     """
-    Convert a raw review snippet text into a clean GitHub-ready Markdown format
-    with sections (Snippet, Issue, Problem, Solution, Rationale).
-    Adds proper code fences and diff highlighting automatically.
+    Convert raw review snippet text into Markdown-like terminal output
+    with red/green colors for diff lines.
     """
 
     # Normalize whitespace
@@ -113,7 +112,7 @@ def format_snippet_for_github(raw_text: str) -> str:
     # --- Clean snippet part ---
     snippet_part = snippet_part.replace("Snippet:", "").strip()
 
-    # Detect language automatically (e.g., css., js., py.)
+    # Detect language automatically
     language = "text"
     if snippet_part.startswith("css"):
         language = "css"
@@ -125,22 +124,35 @@ def format_snippet_for_github(raw_text: str) -> str:
         language = "python"
         snippet_part = snippet_part[2:].strip()
 
-    # --- Build Markdown output ---
+    # ANSI color codes
+    RED = "\033[91m"
+    GREEN = "\033[92m"
+    RESET = "\033[0m"
+
+    # Colorize solution lines
+    colored_solution = []
+    for line in solution.splitlines():
+        if line.startswith('+'):
+            colored_solution.append(f"{GREEN}{line}{RESET}")
+        elif line.startswith('-'):
+            colored_solution.append(f"{RED}{line}{RESET}")
+        else:
+            colored_solution.append(line)
+    colored_solution_text = "\n".join(colored_solution)
+
+    # Build terminal-friendly Markdown
     md = f"### 🧩 Snippet\n```{language}\n{snippet_part}\n```\n\n"
-
     if issue:
-        md += f"### 🐛 Issue\n**{issue}**\n\n"
-
+        md += f"### 🐛 Issue\n{issue}\n\n"
     if problem:
         md += f"### 🤔 Problem\n{problem}\n\n"
-
     if solution:
-        md += f"### 💡 Solution\n```diff\n{solution}\n```\n\n"
-
+        md += f"### 💡 Solution\n{colored_solution_text}\n\n"
     if rationale:
         md += f"### 🧠 Rationale\n{rationale}\n"
 
     return md.strip()
+
 
 
 def get_pr_commit_sha(owner: str, repo: str, pr_number: int) -> str:
