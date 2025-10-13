@@ -141,15 +141,15 @@ def format_snippet_for_terminal(raw_text: str) -> str:
     colored_solution_text = "\n".join(colored_solution)
 
     # Build terminal-friendly Markdown
-    md = f"### 🧩 Snippet\n```{language}\n{snippet_part}\n```\n\n"
+    md = f"Snippet\n```{language}\n{snippet_part}\n```\n\n"
     if issue:
-        md += f"### 🐛 Issue\n{issue}\n\n"
+        md += f" Issue\n{issue}\n\n"
     if problem:
-        md += f"### 🤔 Problem\n{problem}\n\n"
+        md += f" Problem\n{problem}\n\n"
     if solution:
-        md += f"### 💡 Solution\n{colored_solution_text}\n\n"
+        md += f" Solution\n{colored_solution_text}\n\n"
     if rationale:
-        md += f"### 🧠 Rationale\n{rationale}\n"
+        md += f" Rationale\n{rationale}\n"
 
     return md.strip()
 
