@@ -150,11 +150,11 @@ Be specific: include filename and line numbers
 Be constructive: explain issues in a helpful tone
 Be concise: no over-explaining
 Show diff format fixes whenever possible
+Always place @ at the very end of every line.
+Do not append @ to lines ending with ] 
 Ensure start_line and end_line are valid PR diff lines
 + lines in a diff appear green
 - lines in a diff appear red
-Use GitHub markdown formatting for all comments, following https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax.'
-(end of the line show this @ )
 
 
 Example Review Output (JSON Style)
