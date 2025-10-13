@@ -102,7 +102,7 @@ Return a JSON-like list of review objects, structured like this:
     "file": "filename",
     "start_line": line number,
     "end_line": line number,
-    "body": "Snippet:\n```language\ncode here\n```\n\nIssue: <short description>\nProblem: <why it matters>\nSolution:\n```diff\n- old code\n+ new code\n```\nRationale: <why this improves the code>"
+    "body": "Snippet:@\n```language@\ncode here@\n```@\n\nIssue: <short description>@\nProblem: <why it matters>\nSolution:@\n```diff@\n- old code@\n+ new code@\n```@\nRationale: <why this improves the code>"
   }
 ]
 
@@ -154,6 +154,10 @@ Ensure start_line and end_line are valid PR diff lines
 + lines in a diff appear green
 - lines in a diff appear red
 Use GitHub markdown formatting for all comments, following https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax.'
+(end of the line show this @ 
+Example 
+Issue: Duplicate code@ 
+)
 
 
 Example Review Output (JSON Style)
@@ -162,13 +166,13 @@ Example Review Output (JSON Style)
     "file": "user_service.py",
     "start_line": 45,
     "end_line": 48,
-    "body": "Snippet:\n```python\nexample\ndef sum(a, b):\n    return a + b\n```\n\nIssue: Built-in Shadowing\nProblem: `sum` is a Python built-in function. Overriding it can cause confusion and bugs.\nSolution:\n```diff\n- def sum(a, b):\n+ def add(a, b):\n```\nRationale: Using `add` avoids conflicts with the built-in.\n"
+    "body": "Snippet:@\n```python\nexample\ndef sum(a, b):@\n    return a + b@\n```\n\nIssue: Built-in Shadowing\nProblem: `sum` is a Python built-in function. Overriding it can cause confusion and bugs.@\nSolution:@\n```diff@\n- def sum(a, b):@\n+ def add(a, b):@\n```\nRationale: Using `add` avoids conflicts with the built-in.@\n"
   },
   {
     "file": "user_service.py",
     "start_line": 45,
     "end_line": 48,
-    "body": "Issue: Style & Readability\nProblem: One-line function definition reduces readability.\nSolution:\n```python\ndef add(a: float, b: float) -> float:\n    \"\"\"Return the sum of two numbers.\"\"\"\n    return a + b\n```\nRationale: Improves readability, follows PEP8, adds type hints and docstring."
+    "body": "Issue: Style & Readability@\nProblem: One-line function definition reduces readability.@\nSolution:@\n```python@\ndef add(a: float, b: float) -> float:@\n    \"\"\"Return the sum of two numbers.\"\"\"\n    return a + b@\n```\nRationale: Improves readability, follows PEP8, adds type hints and docstring."
   }
 ]
 """
