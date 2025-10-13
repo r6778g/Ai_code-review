@@ -151,8 +151,8 @@ Be constructive: explain issues in a helpful tone
 Be concise: no over-explaining
 Show diff format fixes whenever possible
 Ensure start_line and end_line are valid PR diff lines
- red color (<span style="color:red;">...</span>) for errors, bugs, or bad practices.
- green color (<span style="color:green;">...</span>) for good improvements, optimizations, or best practices.
++ lines in a diff appear green
+- lines in a diff appear red
 
 
 Example Review Output (JSON Style)
