@@ -76,73 +76,71 @@ last_full_comment = ""
 # ==============================
 # Utility Functions
 # ==============================
-import html
-from typing import Optional
+def format_snippet_for_github(raw_text: str) -> str:
+    """
+    Convert a raw review snippet text into a clean GitHub-ready Markdown format
+    with sections (Snippet, Issue, Problem, Solution, Rationale).
+    Adds proper code fences and diff highlighting automatically.
+    """
 
-def string_to_html_text(s: str) -> str:
-  
-    lines = s.splitlines()
-    out_parts = []
-    in_fence = False
-    fence_lang: Optional[str] = None
+    # Normalize whitespace
+    text = " ".join(raw_text.strip().split())
 
-    for line in lines:
-        if line.startswith("```"):  
-            if not in_fence:
-                in_fence = True
-                fence_lang = line[3:].strip() or None
-                lang_class = f' class="language-{html.escape(fence_lang)}"' if fence_lang else ""
-                out_parts.append(f'<pre class="code-block"><code{lang_class}>')
-            else:
-                in_fence = False
-                fence_lang = None
-                out_parts.append('</code></pre>')
-            continue
+    # Initialize fields
+    snippet_part = ""
+    issue = ""
+    problem = ""
+    solution = ""
+    rationale = ""
 
-        if in_fence:
-            # inside code fence: escape but keep raw formatting (pre + code preserve whitespace)
-            out_parts.append(html.escape(line))
-        else:
-            esc = html.escape(line)
-            # mark diff lines
-            if esc.startswith('+'):
-                out_parts.append(f'<span class="diff-add">{esc}</span>')
-            elif esc.startswith('-'):
-                out_parts.append(f'<span class="diff-del">{esc}</span>')
-            else:
-                # normal line (escaped)
-                out_parts.append(esc)
+    # --- Extract sections ---
+    if "Rationale:" in text:
+        text, rationale = text.split("Rationale:", 1)
+        rationale = rationale.strip()
 
-    # if user forgot to close fence, close it to keep valid HTML
-    if in_fence:
-        out_parts.append('</code></pre>')
+    if "Solution:" in text:
+        text, solution = text.split("Solution:", 1)
+        solution = solution.strip()
 
-    body = '\n'.join(out_parts)
+    if "Problem:" in text:
+        text, problem = text.split("Problem:", 1)
+        problem = problem.strip()
 
-    css = """
-<style>
-/* container preserves whitespace and monospace look */
-.diff-container { white-space: pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace; }
+    if "Issue:" in text:
+        snippet_part, issue = text.split("Issue:", 1)
+        issue = issue.strip()
 
-/* diff lines */
-.diff-add { display:block; background:#e9f7ee; color:#034d22; border-left:4px solid #29a745; margin:2px 0; padding:2px 6px; }
-.diff-del { display:block; background:#fff0f0; color:#7a0e0e; border-left:4px solid #e55353; margin:2px 0; padding:2px 6px; }
+    # --- Clean snippet part ---
+    snippet_part = snippet_part.replace("Snippet:", "").strip()
 
-/* fenced code blocks */
-pre.code-block {
-  background:#f6f8fa;
-  border-radius:6px;
-  padding:10px;
-  margin:6px 0;
-  overflow:auto;
-}
-pre.code-block code { display:block; white-space: pre; }
-</style>
-"""
+    # Detect language automatically (e.g., css., js., py.)
+    language = "text"
+    if snippet_part.startswith("css"):
+        language = "css"
+        snippet_part = snippet_part[3:].strip()
+    elif snippet_part.startswith("js"):
+        language = "javascript"
+        snippet_part = snippet_part[2:].strip()
+    elif snippet_part.startswith("py"):
+        language = "python"
+        snippet_part = snippet_part[2:].strip()
 
-    html_fragment = f'{css}<div class="diff-container">{body}</div>'
-    return html_fragment
+    # --- Build Markdown output ---
+    md = f"### 🧩 Snippet\n```{language}\n{snippet_part}\n```\n\n"
 
+    if issue:
+        md += f"### 🐛 Issue\n**{issue}**\n\n"
+
+    if problem:
+        md += f"### 🤔 Problem\n{problem}\n\n"
+
+    if solution:
+        md += f"### 💡 Solution\n```diff\n{solution}\n```\n\n"
+
+    if rationale:
+        md += f"### 🧠 Rationale\n{rationale}\n"
+
+    return md.strip()
 
 
 def get_pr_commit_sha(owner: str, repo: str, pr_number: int) -> str:
@@ -203,7 +201,7 @@ def post_review_comments(
             formatted_comments.append({
                 "path": file_path,
                 "position": c["end_line"],
-                "body": string_to_html_text(c["body"]),
+                "body": format_snippet_for_github(c["body"]),
             })
 
         except KeyError as e:
