@@ -153,6 +153,7 @@ Show diff format fixes whenever possible
 Ensure start_line and end_line are valid PR diff lines
 + lines in a diff appear green
 - lines in a diff appear red
+Use GitHub markdown formatting for all comments, following https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax.'
 
 
 Example Review Output (JSON Style)
