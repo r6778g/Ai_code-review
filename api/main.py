@@ -76,7 +76,7 @@ last_full_comment = ""
 # ==============================
 # Utility Functions
 # ==============================
-def format_snippet_for_terminal(raw_text: str) -> str:
+def format_snippet_for_terminal(text: str) -> str:
     """
     Convert raw review snippet text into Markdown-like terminal output
     with red/green colors for diff lines.
