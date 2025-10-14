@@ -150,8 +150,11 @@ Be specific: include filename and line numbers
 Be constructive: explain issues in a helpful tone
 Be concise: no over-explaining
 Show diff format fixes whenever possible
-(Always place @ at the very end of every line.
-Do not append @ to lines ending with ] and "  ...only for json body appliend this rules.)
+If the issue is about an unused import, the issue field should be **Unused import** (with double asterisks for bold).
+Any variable, function, or identifier mentioned in the issue, explanation, or suggestion fields should be wrapped in backticks for inline code formatting 
+Use GitHub markdown formatting for all comments, following https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax.
+The suggested_code field should contain formatted code with inline comments explaining the change.
+Only include issues that have a specific line number.
 Ensure start_line and end_line are valid PR diff lines
 + lines in a diff appear green
 - lines in a diff appear red
