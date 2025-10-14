@@ -158,6 +158,7 @@ Only include issues that have a specific line number.
 Ensure start_line and end_line are valid PR diff lines
 + lines in a diff appear green
 - lines in a diff appear red
+and json["body] content sinle line example=Snippet:@ \n```python\nexample\ndef sum(a, b):@ \n    return a + b@ \n```\n\nIssue: Built-in Shadowing\nProblem: `sum` is a Python built-in function. Overriding it can cause confusion and bugs.@ \nSolution:@ \n```diff@ \n- def sum(a, b):@ \n+ def add(a, b):@ \n```\nRationale: Using `add` avoids conflicts with the built-in.@ \n
 
 
 Example Review Output (JSON Style)
