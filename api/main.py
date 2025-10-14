@@ -98,9 +98,9 @@ def format_snippet_for_terminal(text: str) -> str:
         line = line.strip()
 
         if line.startswith('+'):
-            html_line = f'<span style="color: green;">{line[1:].strip()}</span><br>'
+            html_line = f'<span style="color: green;">{line[0:].strip()}</span><br>'
         elif line.startswith('-'):
-            html_line = f'<span style="color: red;">{line[1:].strip()}</span><br>'
+            html_line = f'<span style="color: red;">{line[0:].strip()}</span><br>'
         else:
             html_line = f'{line.replace("@", "")}<br>'
 
