@@ -174,7 +174,7 @@ def post_review_comments(
             formatted_comments.append({
                 "path": c["file"],
                 "position": c["end_line"],
-                "body": format_snippet_for_terminal(c["body"]),
+                "body": c["body"],
             })
 
         except KeyError as e:
