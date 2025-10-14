@@ -83,11 +83,17 @@ def format_snippet_for_terminal(text: str) -> str:
     """
 
     # Normalize whitespace
-        # Add newline after punctuation
-    text = re.sub(r'([@])', r'\1\n', text)
+    text = " ".join(text.strip().split())
+
+    # Add newline after '@' and ';'
+    text = re.sub(r'([@;])', r'\1\n', text)
+
     # Remove multiple consecutive newlines
     text = re.sub(r'\n+', r'\n', text)
-    # Strip leading/trailing whitespace
+
+    # Remove trailing '@' at the very end if present
+    text = re.sub(r'@$','', text)
+
     return text.strip()
 
 
@@ -145,10 +151,10 @@ def post_review_comments(
         try:
             # Auto-resolve 
             
-            file_path = find_file_path_in_pr(owner, repo, pr_number, c["file"])
+            #file_path = find_file_path_in_pr(owner, repo, pr_number, c["file"])
 
             formatted_comments.append({
-                "path": file_path,
+                "path": c["file"],
                 "position": c["end_line"],
                 "body": format_snippet_for_terminal(c["body"]),
             })
