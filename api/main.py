@@ -15,6 +15,7 @@ import time
 import jwt
 from .auth import generate_jwt, get_installations, get_installation_token
 import html
+from colorama import Fore, Style, init
 
 
 # ==============================
