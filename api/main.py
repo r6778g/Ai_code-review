@@ -98,9 +98,9 @@ def format_snippet_for_terminal(text: str) -> str:
         line = line.strip()
 
         if line.startswith('+'):
-            colored = f"{Fore.GREEN}{line[1:].strip()}{Style.RESET_ALL}"
+            colored = f"{line[1:].strip()}"
         elif line.startswith('-'):
-            colored = f"{Fore.RED}{line[1:].strip()}{Style.RESET_ALL}"
+            colored = f"{line[1:].strip()}"
         else:
             colored = line.replace('@', '')
 
