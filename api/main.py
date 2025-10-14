@@ -91,10 +91,26 @@ def format_snippet_for_terminal(text: str) -> str:
     # Remove multiple consecutive newlines
     text = re.sub(r'\n+', r'\n', text)
 
-    # Remove trailing '@' at the very end if present
-    text = re.sub(r'@$','', text)
+    # Split into lines and apply colors
+    lines = []
+    for line in text.splitlines():
+        line = line.strip()
 
-    return text.strip()
+        if line.startswith('+'):
+            colored = f"\033[92m{line[1:].strip()}\033[0m"   # Green for additions
+        elif line.startswith('-'):
+            colored = f"\033[91m{line[1:].strip()}\033[0m"   # Red for removals
+        else:
+            colored = line.replace('@', '')
+
+        lines.append(colored)
+
+    # Join and clean up
+    formatted_text = "\n".join(lines).strip()
+    
+
+    return formatted_text
+
 
 
 
