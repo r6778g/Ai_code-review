@@ -83,7 +83,7 @@ def format_snippet_for_terminal(text: str) -> str:
     with red/green colors for diff lines.
     """
 
-    # Normalize whitespace
+     # Normalize whitespace
     text = " ".join(text.strip().split())
 
     # Add newline after '@' and ';'
@@ -92,25 +92,26 @@ def format_snippet_for_terminal(text: str) -> str:
     # Remove multiple consecutive newlines
     text = re.sub(r'\n+', r'\n', text)
 
-    # Split into lines and apply colors
-    lines = []
+    # Split into lines and apply HTML styles
+    html_lines = []
     for line in text.splitlines():
         line = line.strip()
 
         if line.startswith('+'):
-            colored = f"{line[1:].strip()}"
+            html_line = f'<span style="color: green;">{line[1:].strip()}</span><br>'
         elif line.startswith('-'):
-            colored = f"{line[1:].strip()}"
+            html_line = f'<span style="color: red;">{line[1:].strip()}</span><br>'
         else:
-            colored = line.replace('@', '')
+            html_line = f'{line.replace("@", "")}<br>'
 
-        lines.append(colored)
+        html_lines.append(html_line)
 
-    # Join and clean up
-    formatted_text = "\n".join(lines).strip()
-    
+    # Combine everything into a single HTML string
+    formatted_html = "<div style='font-family: monospace; white-space: pre-wrap;'>\n"
+    formatted_html += "\n".join(html_lines)
+    formatted_html += "\n</div>"
 
-    return formatted_text
+    return formatted_html
 
 
 
