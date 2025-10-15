@@ -97,15 +97,12 @@ Your mission: review code clearly and effectively, focusing on standards, readab
 
  ### Output Format
 Return a JSON-like list of review objects, structured like this:
-[
-  {
+ [ {
     "file": "filename",
-    "start_line": line number,
-    "end_line": line number,
-    "body": "Snippet:@ \n```language@\ncode here@ \n```@ \n\nIssue: <short description>@ \nProblem: <why it matters>\nSolution:@ \n```diff@ \n- old code@ \n+ new code@ \n```@ \nRationale: <why this improves the code>"
-  }
-]
-
+    "start_line": "line number",
+    "end_line": "line number",
+    "body": "Snippet:\\n```language\\ncode here\\n```\\n\\nIssue: <short description>\\nProblem: <why it matters>\\nSolution:\\n```diff\\n- old code\\n+ new code\\n```\\nRationale: <why this improves the code>"
+  }]
 ### Review Focus
 Syntax & Structure
 Invalid code: Missing colons, semicolons, mismatched brackets/parentheses
@@ -158,7 +155,8 @@ Only include issues that have a specific line number.
 Ensure start_line and end_line are valid PR diff lines
 + lines in a diff appear green
 - lines in a diff appear red
-and json["body] content sinle line example=Snippet:@ \n```python\nexample\ndef sum(a, b):@ \n    return a + b@ \n```\n\nIssue: Built-in Shadowing\nProblem: `sum` is a Python built-in function. Overriding it can cause confusion and bugs.@ \nSolution:@ \n```diff@ \n- def sum(a, b):@ \n+ def add(a, b):@ \n```\nRationale: Using `add` avoids conflicts with the built-in.@ \n
+All actual newline characters in the "body" value are replaced with the literal string \\n.
+The "body" content should be in a single line with \\n representing line breaks.
 
 
 Example Review Output (JSON Style)
@@ -167,15 +165,16 @@ Example Review Output (JSON Style)
     "file": "user_service.py",
     "start_line": 45,
     "end_line": 48,
-    "body": "Snippet:@ \n```python\nexample\ndef sum(a, b):@ \n    return a + b@ \n```\n\nIssue: Built-in Shadowing\nProblem: `sum` is a Python built-in function. Overriding it can cause confusion and bugs.@ \nSolution:@ \n```diff@ \n- def sum(a, b):@ \n+ def add(a, b):@ \n```\nRationale: Using `add` avoids conflicts with the built-in.@ \n"
+    "body": "Snippet:\\n```python\\nexample\\ndef sum(a, b):\\n    return a + b\\n```\\n\\nIssue: Built-in Shadowing\\nProblem: `sum` is a Python built-in function. Overriding it can cause confusion and bugs.\\nSolution:\\n```diff\\n- def sum(a, b):\\n+ def add(a, b):\\n```\\nRationale: Using `add` avoids conflicts with the built-in."
   },
   {
     "file": "user_service.py",
     "start_line": 45,
     "end_line": 48,
-    "body": "Issue: Style & Readability@ \nProblem: One-line function definition reduces readability.@ \nSolution:@\n```python@ \ndef add(a: float, b: float) -> float:@ \n    \"\"\"Return the sum of two numbers.\"\"\"\n    return a + b@ \n```\nRationale: Improves readability, follows PEP8, adds type hints and docstring."
+    "body": "Issue: Style & Readability\\nProblem: One-line function definition reduces readability.\\nSolution:\\n```python\\ndef add(a: float, b: float) -> float:\\n    \\\"\\\"\\\"Return the sum of two numbers.\\\"\\\"\\\"\\n    return a + b\\n```\\nRationale: Improves readability, follows PEP8, adds type hints and docstring."
   }
 ]
+
 """
 
     return prompt
