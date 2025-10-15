@@ -324,6 +324,7 @@ async def github_webhook(request: Request):
                 review_json = query_openrouter_focused(filename, patch, status)
                 logger.info(review_json)
                 #review_json = review_json.replace('\n','')
+                review_json = review_json.strip()
                 parsed_review = json.loads(review_json)
                 all_reviews.append(parsed_review)
             except Exception as e:
